@@ -2,14 +2,59 @@
 
 services:
   xui:
-    image: alireza7/x-ui
-    container_name: x-ui
-    hostname: yourhostname
+    build:
+      args:
+        appdir: /opt/app
+        # for example, values here are equal to default
+        gid: 5055
+        uid: 5055
+        user: app
+      context: .
+      dockerfile: Dockerfile
+    # image: alireza7/x-ui
+    deploy:
+      resources:
+        limits:
+          cpus: '0.80'
+          memory: 400M
+        reservations:
+          cpus: '0.25'
+          memory: 200M
+    container_name: x-kmui
+    # hostname: bitluk.ddns.net
+    # hostname: yourhostname
+    hostname: learny.mooo.com
+    networks:
+      - x-kmui-net
+    ports:
+      # default port for admin interface - local only
+      - "127.0.0.1:54233:54233"
+      - "443:443"  # Reality for all
     volumes:
-      - $PWD/db/:/etc/x-ui/
-      - $PWD/cert/:/root/cert/
+      - ./_volume_db:/etc/x-ui:rw
+      - cert_data:/home/app/cert:rw
+      # - ./_volume_cert:/root/cert:rw
     environment:
+      appdir: /opt/app
       XRAY_VMESS_AEAD_FORCED: "false"
+      XUI_DB_FOLDER: /etc/x-ui
     tty: true
-    network_mode: host
-    restart: unless-stopped
+    restart: on-failure:3
+    # restart: unless-stopped
+    command: ./x-ui
+
+networks:
+  x-kmui-net:
+    name: x-kmui-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+volumes:
+  cert_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: uid=5055,gid=5055  # Устанавливаем владельца
+      device: ./certificates
