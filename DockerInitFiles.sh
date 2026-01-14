@@ -21,6 +21,8 @@ case $1 in
         FNAME="amd64"
         ;;
 esac
+
+# FIXME: использовать локальные файлы вместо `wget github`
 mkdir -p build/bin
 cd build/bin
 wget -q "https://github.com/XTLS/Xray-core/releases/download/v26.2.6/Xray-linux-${ARCH}.zip"

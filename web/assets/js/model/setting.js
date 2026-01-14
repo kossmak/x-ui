@@ -3,6 +3,7 @@ class AllSetting {
     constructor(data) {
         this.webListen = "";
         this.webDomain = "";
+        // FIXME: сконфигурировать кастомный порт
         this.webPort = 54321;
         this.webCertFile = "";
         this.webKeyFile = "";

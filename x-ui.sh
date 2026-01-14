@@ -835,6 +835,8 @@ open_ports() {
         ufw allow ssh
         ufw allow http
         ufw allow https
+
+        # FIXME: сконфигурировать кастомный порт
         ufw allow 54321/tcp
 
         # Enable the firewall

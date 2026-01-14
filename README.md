@@ -47,6 +47,11 @@ bash <(curl -Ls https://raw.githubusercontent.com/alireza0/x-ui/master/install.s
 VERSION=1.8.0 && bash <(curl -Ls "https://raw.githubusercontent.com/alireza0/x-ui/$VERSION/install.sh") $VERSION
 ```
 
+Visit http://yourdomain:54321 with login admin:admin to starting configure your panel.
+
+**WARNING!**: change login, password and panel listening web-port as minimum requirements for security.
+
+
 ## Manual Install & Upgrade
 
 <details>

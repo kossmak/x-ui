@@ -26,7 +26,7 @@ var defaultValueMap = map[string]string{
 	"xrayTemplateConfig": xrayTemplateConfig,
 	"webListen":          "",
 	"webDomain":          "",
-	"webPort":            "54321",
+	"webPort":            "54321",  // WARNING use custom port !
 	"webCertFile":        "",
 	"webKeyFile":         "",
 	"secret":             random.Seq(32),
