@@ -2,59 +2,40 @@
 
 services:
   xui:
-    build:
-      args:
-        appdir: /opt/app
-        # for example, values here are equal to default
-        gid: 5055
-        uid: 5055
-        user: app
-      context: .
-      dockerfile: Dockerfile
-    # image: alireza7/x-ui
-    deploy:
-      resources:
-        limits:
-          cpus: '0.80'
-          memory: 400M
-        reservations:
-          cpus: '0.25'
-          memory: 200M
+    build: .  # означает, что Dockerfile для сборки нужно искать в этой же директории
     container_name: x-kmui
-    # hostname: bitluk.ddns.net
-    # hostname: yourhostname
     hostname: learny.mooo.com
     networks:
       - x-kmui-net
     ports:
-      # default port for admin interface - local only
+      - "127.0.0.1:54321:54321"  # FIXME: дефолтный нужно будет перенастроить в конфиге
       - "127.0.0.1:54233:54233"
-      - "443:443"  # Reality for all
+      - "4333:443"  # Reality for all ips on custom port 4333
+      # - "80:80"    # Для ACME/редиректов
     volumes:
-      - ./_volume_db:/etc/x-ui:rw
-      - cert_data:/home/app/cert:rw
-      # - ./_volume_cert:/root/cert:rw
+      # если панель, вдруг, станет недоступной после её некорректной настройки,
+      # можно будет исправить ошибочные ключи правкой БД
+      # sudo apt install sqlite3 -y && sudo sqlite3 _volume_uidb/x-ui.db
+      # .help
+      # .tables
+      # .schema settings
+      # select * from settings;
+      # update settings set value=null where key='webDomain';
+      - ./_volume_uidb:/home/app/etc/x-ui:rw
+      - ./_volume_cert:/home/app/cert:rw
     environment:
-      appdir: /opt/app
-      XRAY_VMESS_AEAD_FORCED: "false"
-      XUI_DB_FOLDER: /etc/x-ui
-    tty: true
-    restart: on-failure:3
-    # restart: unless-stopped
-    command: ./x-ui
+      # Должно совпадать с volume, чтобы хранилище сертификатов могло писаться
+      # непривилегированным пользователем и сохраняться между пересозданиями контейнера
+      XUI_DB_FOLDER: /home/app/etc/x-ui
+    user: "5055:5055"  # Явно указываем пользователя (точнее, достаточно uid:gid, тогда можно даже не создавать реального)
+    # restart: on-failure:3
+    restart: always  # в проде нам нужна максимальная выживаемость
+    command: ./x-ui  # внутри Dockerfile устанавливается WORKDIR, поэтому можно локальный путь
 
 networks:
   x-kmui-net:
-    name: x-kmui-network
-    driver: bridge
+    driver: bridge  # позволяет не светить порты контейнера наружу хоста, обойтись маппингом необходимых
     ipam:
       config:
-        - subnet: 172.20.0.0/24
-
-volumes:
-  cert_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: uid=5055,gid=5055  # Устанавливаем владельца
-      device: ./certificates
+        # кастомная сеть подальше от коллизий с дефолтными попытками docker'а
+        - subnet: 172.200.0.0/24

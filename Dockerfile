@@ -14,30 +14,29 @@ ENV TZ=Asia/Tehran
 
 RUN apk add ca-certificates tzdata
 
-ARG user=appuser
+ARG user=app
 ARG userhome=/home/${user}
 ARG appdir=/opt/app
 ARG gid=5055
 ARG uid=5055
 
-#COPY --from=builder  /app/build/ /opt/app/
-COPY --from=builder  /app/build/ ${appdir}/
+# Копируем бинарник
+COPY --from=builder /app/build/ ${appdir}/
 
-# переопределяем в docker-compose.yml
+# Создаем пользователя и директории
+RUN addgroup ${user} --gid ${gid} \
+    && adduser -D -G ${user} -h ${userhome} --uid ${uid} ${user} \
+    && mkdir -p ${userhome}/etc/x-ui ${userhome}/cert \
+    && chown -R ${uid}:${gid} ${userhome} ${appdir}\
+    && mkdir -p ${userhome}/cert \
+    && chown -R ${uid}:${gid} ${userhome}/cert \
+    && ln -sf ${userhome}/cert /root/cert
+
+# Устанавливаем переменные окружения
 ENV XUI_DB_FOLDER=${userhome}/etc/x-ui
 
-# run container as unprivileged user
-# https://pythonspeed.com/articles/root-capabilities-docker-security/
-RUN addgroup app --gid $gid \
-    && adduser -D -G app -h ${userhome} --uid ${uid} ${user} \
-    && mkdir -p ${XUI_DB_FOLDER} \
-    && chown ${user}:${gid} ${XUI_DB_FOLDER}
-
-
 WORKDIR ${appdir}
-#VOLUME [ "/etc/x-ui" ]
-#CMD [ "./x-ui" ]
 
+# непривилегированный пользователь - мастхэв для секьюрности
 USER ${uid}
-# определяем в docker-compose
-#VOLUME [ "${XUI_DB_FOLDER}" ]
+# CMD теперь в docker-compose (вроде меньше на один слой)
