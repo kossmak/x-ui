@@ -12,15 +12,25 @@ IMAGETAG?=latest
 DOCKERNETWORK?=ix-net
 EXPOSED_PORT?=4443
 
+.DEFAULT_GOAL := help
+
+
 %:
 	@:
 
+.PHONY: help
+
+help:
+	echo "help! =)"
+
+
+.PHONY: build run init-network set-restart-always start
 
 build:
 	DOCKER_BUILDKIT=1 docker build --rm --no-cache -t $(IMAGENAME):$(IMAGETAG) .
 
 run: init-network
-    FIRST_IP=$(hostname -I | awk '{print $1}')
+	FIRST_IP=$(hostname -I | awk '{print $1}')
 	docker run -d \
 		--security-opt=no-new-privileges:true \
 		--memory="200m" \
@@ -45,6 +55,9 @@ start:
 stop:
 	docker stop $(CONTAINER)
 
+
+.PHONY: remove-container purge-docker-images
+
 remove-container:
 	docker stop $(CONTAINER) ; docker container remove $(CONTAINER)
 
@@ -52,6 +65,9 @@ purge-docker-images: remove-container
 	# удаление образов, не привязанных ни к одному из созданных контейнеров
 	# docker rmi $(docker images -f dangling=true -q)
 	docker rmi $(IMAGENAME)
+
+
+.PHONY: image-save image-load
 
 image-save:
 	# сохранить образ в архив
@@ -63,6 +79,9 @@ image-save:
 image-load:
 	# загрузить образ из архива
 	docker load -i $(call ARGS,/tmp/idumbp.docker.image.tar)
+
+
+.PHONY: args-debug
 
 # пробуем необязательный параметр
 args-debug:
